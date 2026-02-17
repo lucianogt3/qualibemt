@@ -1,83 +1,102 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-const Home = () => {
-  const [protocolo, setProtocolo] = useState('');
-  const [resultado, setResultado] = useState(null);
-  const [loading, setLoading] = useState(false);
+const Login = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
 
-  const consultar = async () => {
-    if (!protocolo) return alert("Por favor, digite um protocolo.");
-    
-    setLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      const response = await api.get(`/notificacoes/consultar/${protocolo}`);
-      setResultado(response.data);
-    } catch (error) {
-      alert("Protocolo não encontrado ou erro na conexão.");
-      setResultado(null);
-    } finally {
-      setLoading(false);
+      const res = await api.post('/api/auth/login', { email, senha });
+      const { token, usuario } = res.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(usuario));
+      localStorage.setItem('perfil', usuario.perfil);
+
+      if (usuario.perfil === 'Gestor') {
+        navigate('/gestor');
+      } else {
+        navigate('/triagem');
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.error || "Falha na autenticação. Verifique suas credenciais.");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] p-6">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-100">
-        <div className="mb-6">
-          <div className="bg-sky-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="box-search" />
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800">Rastrear Notificação</h1>
-          <p className="text-gray-500 text-sm">Acompanhe o andamento da sua manifestação</p>
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Imagem de fundo com zoom dinâmico */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://i.ibb.co/nqDTxnLf/o-conceito-de-gestao-de-qualidade-padroes-e-classificacao-como-um-processo-de-negocio-e-tecnologia-a.avif" 
+          alt="Gestão de Qualidade" 
+          className="w-full h-full object-cover animate-zoom"
+        />
+        <div className="absolute inset-0 bg-black/40" /> {/* Overlay escuro para legibilidade */}
+      </div>
+
+      {/* Conteúdo do login */}
+      <div className="relative z-10 bg-white/90 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-2xl w-[28rem] border border-white/50">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-black text-slate-900 italic uppercase tracking-tighter">
+            <span className="text-sky-600">QUALI-BENT</span>
+          </h2>
+          <p className="text-sm font-bold text-slate-600 uppercase tracking-widest mt-2">
+            Sistema de Gestão de Notificações
+          </p>
         </div>
 
-        <input 
-          type="text" 
-          placeholder="Ex: NOT0012026"
-          className="w-full border-2 border-gray-200 p-4 rounded-xl mb-4 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all uppercase"
-          value={protocolo}
-          onChange={(e) => setProtocolo(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && consultar()}
-        />
-        
-        <button 
-          onClick={consultar}
-          disabled={loading}
-          className={`w-full ${loading ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'} text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-sky-200`}
-        >
-          {loading ? 'BUSCANDO...' : 'VERIFICAR STATUS'}
-        </button>
-
-        {resultado && (
-          <div className="mt-8 p-6 bg-gray-50 rounded-2xl text-left border border-gray-200 animate-in fade-in zoom-in duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Resultado</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                resultado.status === 'Pendente' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
-              }`}>
-                {resultado.status}
-              </span>
-            </div>
-            
-            <div className="space-y-3 text-sm text-gray-600">
-              <p><strong>📅 Data:</strong> {resultado.data}</p>
-              <p><strong>🏷️ Tipo:</strong> {resultado.origem}</p>
-              {resultado.descricao && (
-                <p className="border-t pt-2 mt-2 italic text-gray-500">
-                  "{resultado.descricao.substring(0, 100)}..."
-                </p>
-              )}
-            </div>
+        <form onSubmit={handleLogin}>
+          <div className="mb-4">
+            <label className="text-[10px] font-black text-slate-500 uppercase ml-2 mb-1 block">E-mail</label>
+            <input 
+              type="email" 
+              className="w-full bg-white border border-slate-200 focus:border-sky-500 p-4 rounded-2xl outline-none transition-all" 
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
           </div>
-        )}
+          <div className="mb-8">
+            <label className="text-[10px] font-black text-slate-500 uppercase ml-2 mb-1 block">Senha</label>
+            <input 
+              type="password" 
+              className="w-full bg-white border border-slate-200 focus:border-sky-500 p-4 rounded-2xl outline-none transition-all" 
+              placeholder="••••••••"
+              value={senha}
+              onChange={(e) => setSenha(e.target.value)}
+              required 
+            />
+          </div>
+          <button type="submit" className="w-full bg-sky-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-sky-700 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-sky-200">
+            Entrar no Painel
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <a href="/" className="text-sm text-slate-500 hover:text-sky-600 transition">
+            ← Voltar para a página inicial
+          </a>
+        </div>
       </div>
+
+      {/* Animação de zoom definida no CSS */}
+      <style jsx>{`
+        @keyframes zoom {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.1); }
+        }
+        .animate-zoom {
+          animation: zoom 20s infinite alternate ease-in-out;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default Home;
+export default Login;

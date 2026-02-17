@@ -1,66 +1,76 @@
 from app import db
-from datetime import datetime, timedelta
+from datetime import datetime
 
 class Notificacao(db.Model):
     __tablename__ = 'notificacoes'
 
-    # Identificadores
     id = db.Column(db.Integer, primary_key=True)
     protocolo = db.Column(db.String(20), unique=True, nullable=False)
-    
-    # 1 - Informações Básicas
+
+    # Informações Básicas
     data_evento = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     turno = db.Column(db.String(20))
     origem = db.Column(db.String(50), nullable=False)
     titulo_ocorrencia = db.Column(db.String(255), nullable=False)
     unidade_notificante = db.Column(db.String(100), nullable=False)
     unidade_notificada = db.Column(db.String(100), nullable=False)
-    
+
     # Detalhes do Paciente
     envolveu_paciente = db.Column(db.Boolean, default=False)
-    nome_paciente = db.Column(db.String(255), nullable=True)
-    prontuario = db.Column(db.String(50), nullable=True)
-    data_nascimento_paciente = db.Column(db.Date, nullable=True)
-    
+    nome_paciente = db.Column(db.String(255))
+    prontuario = db.Column(db.String(50))
+    data_nascimento_paciente = db.Column(db.Date)
+
     # Identificação do Notificante
     quer_se_identificar = db.Column(db.Boolean, default=False)
-    identificacao_notificante = db.Column(db.String(255), nullable=True)
-    
-    # Relato
-    descricao = db.Column(db.Text, nullable=False) 
-    foto_path = db.Column(db.String(255), nullable=True) 
+    identificacao_notificante = db.Column(db.String(255))
 
-    # 2 - Ação Imediata
-    houve_acao_imediata = db.Column(db.Boolean, default=False) 
-    descricao_acao_imediata = db.Column(db.Text, nullable=True)
-    data_acao_imediata = db.Column(db.DateTime, nullable=True)
-    
-    # 3 - Gestão, Triagem e Classificação
+    # Relato
+    descricao = db.Column(db.Text, nullable=False)
+    foto_path = db.Column(db.String(255))
+
+    # Ação Imediata
+    houve_acao_imediata = db.Column(db.Boolean, default=False)
+    descricao_acao_imediata = db.Column(db.Text)
+    data_acao_imediata = db.Column(db.DateTime)
+
+    # Gestão, Triagem e Classificação
     status = db.Column(db.String(50), default='PENDENTE')
-    classificacao = db.Column(db.String(50), nullable=True)
-    gravidade = db.Column(db.String(50), nullable=True) 
-    
+    classificacao = db.Column(db.String(50))
+    gravidade = db.Column(db.String(50))
+
     # Gestão de Resposta
-    gestor_responsavel = db.Column(db.String(100), nullable=True)
-    prazo_limite = db.Column(db.DateTime, nullable=True)
-    
-    # --- NOVOS CAMPOS PARA ENCERRAMENTO (QUALIDADE) ---
-    motivo_encerramento_padrao = db.Column(db.String(100), nullable=True) # Duplicidade, Improcedente...
-    justificativa_encerramento = db.Column(db.Text, nullable=True)        # Texto livre
-    data_encerramento = db.Column(db.DateTime, nullable=True)
-    # --------------------------------------------------
+    gestor_responsavel = db.Column(db.String(100))
+    prazo_limite = db.Column(db.DateTime)
+
+    # Encerramento (Qualidade)
+    motivo_encerramento_padrao = db.Column(db.String(100))
+    justificativa_encerramento = db.Column(db.Text)
+    data_encerramento = db.Column(db.DateTime)
+
+    # Evidência do Gestor (NOVO)
+    evidencia_path = db.Column(db.String(255))
 
     # Auditoria
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
-    atualizado_por = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    atualizado_por = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
     data_atualizacao = db.Column(db.DateTime, onupdate=db.func.now())
 
+    def calcular_idade(self):
+        if self.data_nascimento_paciente:
+            hoje = datetime.utcnow().date()
+            idade = hoje.year - self.data_nascimento_paciente.year
+            if (hoje.month, hoje.day) < (self.data_nascimento_paciente.month, self.data_nascimento_paciente.day):
+                idade -= 1
+            return idade
+        return None
+
     def to_dict(self):
-        """Converte para JSON, calculando também se o prazo venceu"""
         atrasado = False
-        # Se tem prazo e não está concluído ou encerrado, verifica atraso
         if self.prazo_limite and self.status not in ['CONCLUIDO', 'ENCERRADA']:
             atrasado = datetime.utcnow() > self.prazo_limite
+
+        idade = self.calcular_idade()
 
         return {
             "id": self.id,
@@ -72,6 +82,11 @@ class Notificacao(db.Model):
             "unidade_notificante": self.unidade_notificante,
             "unidade_notificada": self.unidade_notificada,
             "envolveu_paciente": self.envolveu_paciente,
+            # Campos renomeados para o frontend (padrão paciente_*)
+            "paciente_nome": self.nome_paciente,
+            "paciente_prontuario": self.prontuario,
+            "paciente_idade": idade,
+            # Mantendo os originais para compatibilidade
             "nome_paciente": self.nome_paciente,
             "prontuario": self.prontuario,
             "data_nascimento_paciente": self.data_nascimento_paciente.isoformat() if self.data_nascimento_paciente else None,
@@ -85,7 +100,8 @@ class Notificacao(db.Model):
             "motivo_padrao": self.motivo_encerramento_padrao,
             "justificativa": self.justificativa_encerramento,
             "data_encerramento": self.data_encerramento.isoformat() if self.data_encerramento else None,
-            "criado_em": self.criado_em.strftime('%d/%m/%Y %H:%M') if self.criado_em else None
+            "criado_em": self.criado_em.strftime('%d/%m/%Y %H:%M') if self.criado_em else None,
+            "evidencia_path": self.evidencia_path   # <-- NOVO
         }
 
     def __repr__(self):
