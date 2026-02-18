@@ -5,71 +5,67 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Pegamos os dados do localStorage com uma verificação de segurança
-  const storedUser = localStorage.getItem('user');
+  const storedUser = localStorage.getItem('usuario') || localStorage.getItem('user');
   let user = null;
 
   try {
-    if (storedUser) {
-      user = JSON.parse(storedUser);
-    }
+    if (storedUser) user = JSON.parse(storedUser);
   } catch (error) {
-    console.error("Erro ao ler dados do usuário", error);
+    console.error("Erro ao carregar usuário", error);
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.clear();
+    navigate('/');
   };
 
-  // Não mostrar a navbar na página inicial
-  if (location.pathname === '/') {
-    return null;
-  }
+  // Não mostrar na tela azul de busca
+  if (location.pathname === '/') return null;
 
   return (
-    <nav className="bg-sky-700 text-white shadow-lg p-4">
+    <nav className="bg-sky-800 text-white shadow-xl p-4">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo / Nome do Sistema */}
-        <Link to="/" className="text-xl font-bold tracking-tight hover:text-sky-200 transition">
-          SISTEMA <span className="text-sky-300">QUALIDADE</span>
+        <Link to="/dashboard" className="text-xl font-black italic tracking-tighter">
+          SISTEMA <span className="text-sky-400">QUALIDADE</span>
         </Link>
 
-        <div className="flex gap-4 items-center">
-          {user ? (
+        <div className="flex gap-6 items-center">
+          {user && (
             <>
-              {/* Menu Comum para usuários logados */}
-              <Link to="/admin" className="hover:text-sky-200 font-medium">Dashboard</Link>
-              <Link to="/triagem" className="hover:text-sky-200 font-medium">Triagem</Link>
+              {/* 📊 LINK DASHBOARD (Garante que apareça para todos agora) */}
+              <Link 
+                to="/dashboard" 
+                className={`text-[10px] font-black uppercase tracking-widest hover:text-sky-300 transition ${location.pathname === '/dashboard' ? 'text-sky-300 underline underline-offset-4' : ''}`}
+              >
+                Dashboard
+              </Link>
               
-              {/* MENU EXCLUSIVO DO ADMINISTRADOR (perfil: ADM) */}
-              {user?.perfil === 'ADM' && (
-                <div className="flex gap-3 border-l border-sky-500 pl-4 ml-2">
-                  <Link 
-                    to="/admin/config-ocorrencias" 
-                    className="text-yellow-300 font-bold hover:text-yellow-100 flex items-center gap-1"
-                  >
-                    <span>⚙️</span> Itens/Setores
-                  </Link>
-                  <Link 
-                    to="/admin/usuarios" 
-                    className="text-green-300 font-bold hover:text-green-100 flex items-center gap-1"
-                  >
-                    <span>👥</span> Usuários
-                  </Link>
+              {/* 📋 CENTRO DE TRIAGEM (Acesso Qualidade e ADM) */}
+              {(user.perfil === 'Qualidade' || user.perfil === 'ADM') && (
+                <Link 
+                  to="/triagem" 
+                  className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl border border-sky-600 hover:bg-sky-700 transition ${location.pathname === '/triagem' ? 'bg-sky-700' : ''}`}
+                >
+                  Centro de Triagem
+                </Link>
+              )}
+
+              {/* ⚙️ CONFIGURAÇÕES (Somente ADM) */}
+              {user.perfil === 'ADM' && (
+                <div className="flex gap-4 border-l border-sky-600 pl-4 ml-2">
+                   <Link to="/admin/usuarios" className="text-[10px] font-black uppercase text-sky-300 hover:text-white">Usuários</Link>
+                   <Link to="/admin/config-ocorrencias" className="text-[10px] font-black uppercase text-sky-300 hover:text-white">Config</Link>
                 </div>
               )}
 
-              {/* Botão Sair */}
               <button 
-                onClick={handleLogout} 
-                className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition ml-4"
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition"
               >
                 Sair
               </button>
             </>
-          ) : null /* Se não estiver logado, não mostra nada (já oculto na página inicial) */}
+          )}
         </div>
       </div>
     </nav>
