@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -24,7 +24,7 @@ const Inicial = () => {
       if (usuario.perfil === 'Gestor') {
         navigate('/gestor');
       } else {
-        navigate('/triagem');
+        navigate('/dashboard');
       }
     } catch (err) {
       alert(err.response?.data?.error || "Falha na autenticação.");
@@ -63,7 +63,7 @@ const Inicial = () => {
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter drop-shadow-lg">
-            <span className="text-sky-400">QUALI-BENT</span>
+            <span className="text-sky-400">QUALI-BEMT</span>
           </h1>
           <p className="text-white/80 text-sm uppercase tracking-widest mt-2">
             Sistema de Gestão de Notificações
@@ -177,3 +177,4 @@ const Inicial = () => {
 };
 
 export default Inicial;
+

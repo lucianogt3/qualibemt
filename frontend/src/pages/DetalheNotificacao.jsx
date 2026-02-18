@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -14,7 +14,7 @@ const DetalheNotificacao = () => {
   const atualizarStatus = async (novoStatus) => {
     await api.put(`/notificacoes/status/${protocolo}`, { status: novoStatus });
     alert("Status atualizado!");
-    navigate('/triagem');
+    navigate('/dashboard');
   };
 
   if (!notificacao) return <p className="p-8">Carregando...</p>;
@@ -38,3 +38,4 @@ const DetalheNotificacao = () => {
 };
 
 export default DetalheNotificacao;
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
@@ -19,7 +19,7 @@ const Login = () => {
       if (usuario.perfil === 'Gestor') {
         navigate('/gestor');
       } else {
-        navigate('/triagem');
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error(err);
@@ -43,7 +43,7 @@ const Login = () => {
       <div className="relative z-10 bg-white/90 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-2xl w-[28rem] border border-white/50">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-black text-slate-900 italic uppercase tracking-tighter">
-            <span className="text-sky-600">QUALI-BENT</span>
+            <span className="text-sky-600">QUALI-BEMT</span>
           </h2>
           <p className="text-sm font-bold text-slate-600 uppercase tracking-widest mt-2">
             Sistema de Gestão de Notificações
@@ -100,3 +100,4 @@ const Login = () => {
 };
 
 export default Login;
+

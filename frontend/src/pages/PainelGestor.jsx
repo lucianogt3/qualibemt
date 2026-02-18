@@ -1,5 +1,63 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+
+const ISHIKAWA_OPTIONS = {
+  mao_de_obra: [
+    "Falta de treinamento / capacitação",
+    "Sobrecarga de trabalho",
+    "Falha de comunicação",
+    "Desatenção / fadiga",
+    "Dimensionamento inadequado",
+    "Não adesão a protocolo",
+    "Equipe nova / rotatividade",
+    "Não se aplica"
+  ],
+  maquinas: [
+    "Equipamento com falha",
+    "Manutenção preventiva atrasada",
+    "Calibração vencida",
+    "Uso inadequado do equipamento",
+    "Falta de equipamento disponível",
+    "Alarme/configuração incorreta",
+    "Não se aplica"
+  ],
+  materiais: [
+    "Falta de material/insumo",
+    "Material inadequado",
+    "Material com defeito",
+    "Padronização insuficiente",
+    "Armazenamento inadequado",
+    "Validade / rastreabilidade",
+    "Não se aplica"
+  ],
+  metodos: [
+    "Protocolo inexistente",
+    "Protocolo desatualizado",
+    "Fluxo confuso",
+    "Falta de checklist",
+    "Processo com etapas manuais",
+    "Mudança de rotina sem treinamento",
+    "Não se aplica"
+  ],
+  ambiente: [
+    "Interrupções durante a tarefa",
+    "Ruído / iluminação inadequada",
+    "Layout físico ruim",
+    "Pressão de tempo / urgência",
+    "Ambiente com alta rotatividade",
+    "Falhas de sinalização",
+    "Não se aplica"
+  ],
+  medida: [
+    "Indicador inexistente",
+    "Métrica inadequada",
+    "Falha no registro/documentação",
+    "Auditoria insuficiente",
+    "Dados incompletos",
+    "Monitoramento irregular",
+    "Não se aplica"
+  ]
+};
 
 const PainelGestor = () => {
     const [todasNotificacoes, setTodasNotificacoes] = useState([]);
@@ -24,15 +82,18 @@ const PainelGestor = () => {
         como: '',
         onde: ''
     });
+
+    // ✅ Ajustado para as chaves do seu ISHIKAWA_OPTIONS + conclusão livre
     const [ishikawa, setIshikawa] = useState({
-        metodo: '',
+        metodos: '',
         mao_de_obra: '',
-        maquina: '',
-        material: '',
-        meio_ambiente: '',
+        maquinas: '',
+        materiais: '',
+        ambiente: '',
         medida: '',
         conclusao: ''
     });
+
     const [arquivoEvidencia, setArquivoEvidencia] = useState(null);
 
     // Função para calcular dias restantes
@@ -321,9 +382,18 @@ const PainelGestor = () => {
                                                         como: p.plano_acao?.como || '',
                                                         onde: p.plano_acao?.onde || ''
                                                     });
+
+                                                    // ✅ Se vier do back, preserva; se não, usa seu padrão
                                                     setIshikawa(p.ishikawa || {
-                                                        metodo: '', mao_de_obra: '', maquina: '', material: '', meio_ambiente: '', medida: '', conclusao: ''
+                                                        metodos: '',
+                                                        mao_de_obra: '',
+                                                        maquinas: '',
+                                                        materiais: '',
+                                                        ambiente: '',
+                                                        medida: '',
+                                                        conclusao: ''
                                                     });
+
                                                     setArquivoEvidencia(null);
                                                 }}
                                                 className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-700 transition-all shadow-lg"
@@ -336,7 +406,6 @@ const PainelGestor = () => {
                             })}
                         </div>
                     ) : (
-                        // 🎉 Animação de parabéns (mantida)
                         <div className="bg-white p-16 rounded-[3rem] text-center border-2 border-dashed border-green-200 shadow-inner">
                             <div className="text-7xl mb-4 animate-bounce">🎉</div>
                             <h3 className="text-2xl font-black text-green-600 uppercase tracking-tight">Tudo em dia!</h3>
@@ -403,9 +472,17 @@ const PainelGestor = () => {
                                                             como: n.plano_acao?.como || '',
                                                             onde: n.plano_acao?.onde || ''
                                                         });
+
                                                         setIshikawa(n.ishikawa || {
-                                                            metodo: '', mao_de_obra: '', maquina: '', material: '', meio_ambiente: '', medida: '', conclusao: ''
+                                                            metodos: '',
+                                                            mao_de_obra: '',
+                                                            maquinas: '',
+                                                            materiais: '',
+                                                            ambiente: '',
+                                                            medida: '',
+                                                            conclusao: ''
                                                         });
+
                                                         setArquivoEvidencia(null);
                                                     }}
                                                     className="text-sky-600 hover:text-sky-800 font-semibold text-xs uppercase tracking-wider"
@@ -428,7 +505,7 @@ const PainelGestor = () => {
                 </div>
             )}
 
-            {/* MODAL DE VISUALIZAÇÃO / EDIÇÃO (Mantido o mesmo, mas com comportamento diferenciado) */}
+            {/* MODAL DE VISUALIZAÇÃO / EDIÇÃO */}
             {selecionada && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
                     <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
@@ -524,25 +601,52 @@ const PainelGestor = () => {
                                 ))}
                             </div>
 
-                            {/* Ishikawa (se houver) */}
+                            {/* ✅ Ishikawa (6Ms) com SELECT + conclusão livre */}
                             {selecionada.gravidade === 'Grave / Sentinela' && (
                                 <div className="mt-6 p-5 bg-amber-50 rounded-xl border border-amber-200">
                                     <h3 className="text-sm font-black text-amber-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                        <span>🐟</span> Análise Ishikawa (6Ms)
+                                        <span>🐟</span> Análise Ishikawa (6Ms) · Padronizada
                                     </h3>
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {['metodo', 'mao_de_obra', 'maquina', 'material', 'meio_ambiente', 'medida', 'conclusao'].map((campo) => (
-                                            <div key={campo} className={campo === 'conclusao' ? 'col-span-2' : ''}>
-                                                <label className="text-[10px] font-black text-amber-700 uppercase">{campo.replace('_', ' ')}</label>
-                                                <textarea
-                                                    rows={campo === 'conclusao' ? 3 : 2}
-                                                    className="w-full p-2 border border-amber-200 rounded-lg text-sm"
-                                                    value={ishikawa[campo] || ''}
-                                                    onChange={(e) => setIshikawa({ ...ishikawa, [campo]: e.target.value })}
+                                        {[
+                                            { key: 'mao_de_obra', label: 'Mão de Obra' },
+                                            { key: 'maquinas', label: 'Máquinas' },
+                                            { key: 'materiais', label: 'Materiais' },
+                                            { key: 'metodos', label: 'Métodos' },
+                                            { key: 'ambiente', label: 'Ambiente' },
+                                            { key: 'medida', label: 'Medida' },
+                                        ].map(({ key, label }) => (
+                                            <div key={key}>
+                                                <label className="text-[10px] font-black text-amber-700 uppercase">{label}</label>
+                                                <select
+                                                    className="w-full p-3 border border-amber-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                    value={ishikawa[key] || ''}
+                                                    onChange={(e) => setIshikawa({ ...ishikawa, [key]: e.target.value })}
                                                     disabled={abaAtiva === 'historico'}
-                                                />
+                                                >
+                                                    <option value="">Selecione...</option>
+                                                    {(ISHIKAWA_OPTIONS[key] || []).map(opt => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         ))}
+
+                                        <div className="md:col-span-2">
+                                            <label className="text-[10px] font-black text-amber-700 uppercase">Conclusão (livre)</label>
+                                            <textarea
+                                                rows={3}
+                                                className="w-full p-3 border border-amber-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-200"
+                                                placeholder="Descreva a síntese da análise, barreiras, aprendizados e ações preventivas..."
+                                                value={ishikawa.conclusao || ''}
+                                                onChange={(e) => setIshikawa({ ...ishikawa, conclusao: e.target.value })}
+                                                disabled={abaAtiva === 'historico'}
+                                            />
+                                            <p className="text-[11px] text-amber-700/80 mt-2">
+                                                Cultura Justa: foco em melhorar barreiras e processo — aprender com o evento.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             )}
