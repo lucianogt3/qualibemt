@@ -1,8 +1,8 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# 🤝 Tabela de Associação - Usamos extend_existing para evitar erros de redefinição
-usuarios_setores = db.Table('usuarios_setores',
+usuarios_setores = db.Table(
+    'usuarios_setores',
     db.Column('usuario_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
     db.Column('setor_id', db.Integer, db.ForeignKey('setores.id'), primary_key=True),
     extend_existing=True
@@ -18,18 +18,20 @@ class Usuario(db.Model):
     senha_hash = db.Column(db.String(255), nullable=False)
     perfil = db.Column(db.String(20), default='Gestor')
     ativo = db.Column(db.Boolean, default=True)
-    
-    # 🔄 Relacionamento: Aponta para o campo 'gestores' na classe Setor
+
+    primeiro_acesso = db.Column(db.Boolean, default=True)
+    tentativas_login = db.Column(db.Integer, default=0)
+
     setores = db.relationship(
-        'Setor', 
-        secondary=usuarios_setores, 
+        'Setor',
+        secondary=usuarios_setores,
         back_populates='gestores'
     )
 
-    def set_senha(self, senha):
+    def set_senha(self, senha: str):
         self.senha_hash = generate_password_hash(senha)
 
-    def check_senha(self, senha):
+    def check_senha(self, senha: str) -> bool:
         return check_password_hash(self.senha_hash, senha)
 
     def to_dict(self):
@@ -38,6 +40,7 @@ class Usuario(db.Model):
             "nome": self.nome,
             "email": self.email,
             "perfil": self.perfil,
-            "ativo": self.ativo,
+            "ativo": bool(self.ativo),
+            "primeiro_acesso": bool(self.primeiro_acesso),
             "setores": [s.nome for s in self.setores]
         }

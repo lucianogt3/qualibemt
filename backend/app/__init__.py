@@ -1,41 +1,49 @@
 import os
 import logging
-from flask import Flask, send_from_directory, jsonify
+from flask import Flask, send_from_directory, jsonify, Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 from config import Config
 
-# Extensões
 db = SQLAlchemy()
 migrate = Migrate()
+jwt = JWTManager()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Configuração de logging
+    # ✅ JWT
+    # Preferível ter isso no .env e Config, mas mantendo fallback:
+    app.config["JWT_SECRET_KEY"] = getattr(config_class, "JWT_SECRET_KEY", None) or os.getenv(
+        "JWT_SECRET_KEY",
+        "hospital-bem-t-care-secret-key-2026"
+    )
+    jwt.init_app(app)
+
+    # Logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    # CORS – libera apenas o frontend em desenvolvimento
+    # CORS
     CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
 
-    # Inicializa extensões
+    # Extensões
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Garante que a pasta de uploads exista
+    # Uploads
     upload_folder = os.path.join(app.root_path, 'uploads', 'evidencias')
     os.makedirs(upload_folder, exist_ok=True)
     logger.info(f"Pasta de uploads garantida: {upload_folder}")
 
-    # Rota para servir arquivos estáticos (evidências)
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)
 
-    # Importação e registro dos blueprints
+    # Blueprints
     from app.routes.auth_routes import bp as auth_bp
     from app.routes.notificacao_routes import bp as notificacao_bp
     from app.routes.setor_routes import bp as setor_bp
@@ -50,20 +58,20 @@ def create_app(config_class=Config):
     app.register_blueprint(config_routes.bp, url_prefix='/api/config')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
-    # Blueprint de teste (Ping)
-    from flask import Blueprint
+    # Ping
     ping_bp = Blueprint("ping_api", __name__, url_prefix="/api")
+
     @ping_bp.get("/ping")
     def ping():
         return {"pong": True}
+
     app.register_blueprint(ping_bp)
 
-    # Tratamento de erro 404 personalizado
+    # Errors
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"error": "Recurso não encontrado"}), 404
 
-    # Tratamento de erro 500 personalizado
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()

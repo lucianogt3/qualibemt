@@ -1,0 +1,32 @@
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# =========================
+# NODE / FRONTEND
+# =========================
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+
+# =========================
+# FLASK
+# =========================
+instance/
+*.log
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.DS_Store
+Thumbs.db
