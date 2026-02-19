@@ -3,73 +3,90 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Páginas
-import Inicial from './pages/Inicial'; // Sua tela azul (Busca + Acesso Restrito)
+import Inicial from './pages/Inicial'; // ✅ agora vai ser a tela de login bonita
 import RegistroOcorrencia from './pages/RegistroOcorrencia';
-import Login from './pages/Login';
 import Triagem from './pages/Triagem';
-import PainelGestor from './pages/PainelGestor'; // Agora agindo como Dashboard Geral
+import PainelGestor from './pages/PainelGestor';
 
 // Administrativo
-import AdminDashboard from './pages/AdminDashboard'; 
+import AdminDashboard from './pages/AdminDashboard';
 import GerenciarUsuarios from './pages/Admin/GerenciarUsuarios';
-import ConfigOcorrencias from './pages/Admin/ConfiguracoesOcorrencia'; 
+import ConfigOcorrencias from './pages/Admin/ConfiguracoesOcorrencia';
 
 function App() {
   return (
     <BrowserRouter>
       <Navbar />
       <Routes>
-        {/* 1. TELA INICIAL (Apenas a tela azul de busca) */}
-        <Route path="/" element={<Inicial />} />
+        {/* ✅ 1) / agora redireciona para /login (tela bonita) */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* 2. LOGIN (Removido o redirecionamento automático para a Inicial) */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* 3. REGISTRO PÚBLICO */}
+        {/* ✅ 2) /login agora é a tela bonita (Inicial) */}
+        <Route path="/login" element={<Inicial />} />
+
+        {/* ✅ 3) REGISTRO PÚBLICO */}
         <Route path="/registrar" element={<RegistroOcorrencia />} />
-        
-        {/* 4. DASHBOARD GERAL (Para Qualidade, Gestor e ADM verem os KPIs) */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute allowedPerfis={['Qualidade', 'Gestor', 'ADM']}>
-            <PainelGestor />
-          </ProtectedRoute>
-        } />
 
-        {/* 5. TRIAGEM (Acesso apenas Qualidade e ADM) */}
-        <Route path="/triagem" element={
-          <ProtectedRoute allowedPerfis={['Qualidade', 'ADM']}>
-            <Triagem />
-          </ProtectedRoute>
-        } />
+        {/* ✅ 4) DASHBOARD */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedPerfis={['Qualidade', 'Gestor', 'ADM']}>
+              <PainelGestor />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* 6. GESTOR (Caso queira manter uma rota específica, senão use o /dashboard) */}
-        <Route path="/gestor" element={
-          <ProtectedRoute allowedPerfis={['Gestor', 'ADM']}>
-            <PainelGestor />
-          </ProtectedRoute>
-        } />
+        {/* ✅ 5) TRIAGEM */}
+        <Route
+          path="/triagem"
+          element={
+            <ProtectedRoute allowedPerfis={['Qualidade', 'ADM']}>
+              <Triagem />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* 7. ROTAS ADMIN */}
-        <Route path="/admin" element={
-          <ProtectedRoute allowedPerfis={['ADM']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/admin/usuarios" element={
-          <ProtectedRoute allowedPerfis={['ADM']}>
-            <GerenciarUsuarios />
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/admin/config-ocorrencias" element={
-          <ProtectedRoute allowedPerfis={['ADM']}>
-            <ConfigOcorrencias />
-          </ProtectedRoute>
-        } />
+        {/* ✅ 6) /gestor (opcional) */}
+        <Route
+          path="/gestor"
+          element={
+            <ProtectedRoute allowedPerfis={['Gestor', 'ADM']}>
+              <PainelGestor />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Rota de segurança: se digitar algo errado, volta para a tela azul */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* ✅ 7) ROTAS ADMIN */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedPerfis={['ADM']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/usuarios"
+          element={
+            <ProtectedRoute allowedPerfis={['ADM']}>
+              <GerenciarUsuarios />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config-ocorrencias"
+          element={
+            <ProtectedRoute allowedPerfis={['ADM']}>
+              <ConfigOcorrencias />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ✅ fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
